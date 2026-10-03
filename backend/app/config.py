@@ -50,9 +50,9 @@ class Settings(BaseSettings):
     # so rotating one doesn't invalidate the other.
     TRACKING_HMAC_SECRET: str = "change-me-tracking-hmac-secret"
 
-    # API key for an LLM/AI provider, used by any future AI-assisted feature
-    # (for example, generating template copy). Kept out of source and read from
-    # the environment; blank by default so nothing depends on it being set.
+    # Optional API key for an external text-generation provider, reserved for a
+    # future template-copy helper. Kept out of source and read from the
+    # environment; blank by default so nothing depends on it being set.
     LLM_API_KEY: str = ""
 
     SMTP_HOST: str = "localhost"
