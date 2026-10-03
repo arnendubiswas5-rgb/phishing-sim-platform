@@ -1,3 +1,4 @@
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -9,8 +10,31 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+asyncpg://phishsim:change-me@localhost:5432/phishing_sim"
 
     REDIS_URL: str = "redis://localhost:6379/0"
-    CELERY_BROKER_URL: str = "redis://localhost:6379/0"
-    CELERY_RESULT_BACKEND: str = "redis://localhost:6379/1"
+    # Blank by default: filled from REDIS_URL below unless explicitly set, so a
+    # managed-Redis deploy (e.g. Railway) only needs REDIS_URL, never a stray
+    # localhost broker.
+    CELERY_BROKER_URL: str = ""
+    CELERY_RESULT_BACKEND: str = ""
+
+    @field_validator("DATABASE_URL")
+    @classmethod
+    def _coerce_async_driver(cls, v: str) -> str:
+        # Managed Postgres (Railway/Heroku/etc.) hands out "postgres://" or
+        # "postgresql://" URLs; SQLAlchemy's async engine needs the asyncpg
+        # driver named explicitly. Normalize so the injected URL just works.
+        if v.startswith("postgres://"):
+            return "postgresql+asyncpg://" + v[len("postgres://"):]
+        if v.startswith("postgresql://"):
+            return "postgresql+asyncpg://" + v[len("postgresql://"):]
+        return v
+
+    @model_validator(mode="after")
+    def _default_celery_to_redis(self) -> "Settings":
+        if not self.CELERY_BROKER_URL:
+            self.CELERY_BROKER_URL = self.REDIS_URL
+        if not self.CELERY_RESULT_BACKEND:
+            self.CELERY_RESULT_BACKEND = self.REDIS_URL
+        return self
 
     SECRET_KEY: str = "change-me-to-a-long-random-string"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60

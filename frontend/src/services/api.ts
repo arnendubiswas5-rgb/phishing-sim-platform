@@ -36,8 +36,13 @@ export function clearToken() {
   localStorage.removeItem(TOKEN_KEY);
 }
 
+// In local dev the Vite proxy forwards "/api" to the backend, so the relative
+// default works. In a split-service deploy (e.g. Railway) the frontend and
+// backend are separate origins, so set VITE_API_BASE_URL at build time to the
+// backend's public API root, e.g. "https://<backend>.up.railway.app/api/v1"
+// (and add that frontend origin to the backend's CORS_ORIGINS).
 export const http: AxiosInstance = axios.create({
-  baseURL: "/api/v1",
+  baseURL: import.meta.env.VITE_API_BASE_URL ?? "/api/v1",
 });
 
 export interface ApiErrorInfo {

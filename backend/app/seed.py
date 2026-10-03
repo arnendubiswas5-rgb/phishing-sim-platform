@@ -1,4 +1,5 @@
 import logging
+import os
 
 from sqlalchemy import select
 
@@ -11,8 +12,10 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_TENANT_NAME = "Default"
 DEFAULT_TENANT_SLUG = "default"
-DEFAULT_ADMIN_EMAIL = "admin"
-DEFAULT_ADMIN_PASSWORD = "Admin_ChangeMe_123!"
+# Overridable from the environment so a deploy can seed its own admin without a
+# code change. Falls back to the local-dev defaults when unset.
+DEFAULT_ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin")
+DEFAULT_ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "Admin_ChangeMe_123!")
 
 
 async def seed_default_admin() -> None:
